@@ -39,11 +39,11 @@ func main() {
 			// use a type switch to detect an error that can be unwrapped into multiple errors
 			switch err := err.(type) {
 			case interface{ Unwrap() []error }:
-				// if we have one use a loop to walk through allErrors and build a single string
+				// if we have one, use a loop to walk through allErrors and build a single string
 				allErrors := err.Unwrap()
-				var messages []string
-				for _, e := range allErrors {
-					messages = append(messages, processError(e, emp))
+				messages := make([]string, len(allErrors))
+				for i, e := range allErrors {
+					messages[i] = processError(e, emp)
 				}
 				message = message + " allErrors: " + strings.Join(messages, ", ")
 			default:
@@ -59,14 +59,14 @@ processError is a method for converting an error into a message. It has special 
 EmptyFieldError.
 */
 func processError(err error, emp Employee) string {
-	var fieldErr EmptyFieldError
 	if errors.Is(err, ErrInvalidID) {
 		return fmt.Sprintf("invalid ID: %s", emp.ID)
-	} else if errors.As(err, &fieldErr) {
-		return fmt.Sprintf("empty field %s", fieldErr.FieldName)
-	} else {
-		return fmt.Sprintf("%v", err)
 	}
+	var fieldErr EmptyFieldError
+	if errors.As(err, &fieldErr) {
+		return fmt.Sprintf("empty field %s", fieldErr.FieldName)
+	}
+	return fmt.Sprintf("%v", err)
 }
 
 const data = `
